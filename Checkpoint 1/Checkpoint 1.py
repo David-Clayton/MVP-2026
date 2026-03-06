@@ -2,9 +2,9 @@ import numpy as np
 import random 
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation as animate
-import scipy.constants as const
 import argparse 
 import time 
+from numba import jit
 
 class IsingModel:
 
@@ -495,7 +495,7 @@ class IsingModel:
                 temp = array[i,0] 
                 #Get heat capacity
                 c = self.compute_heat_capacity(temp, avg_e, avg_sq_e)
-                #Append to set of calculated chis
+                #Append to set of calculated heat capacities
                 c_data[c_index] = c
                 c_index += 1
             
@@ -531,56 +531,72 @@ class IsingModel:
        
 
 def main():
+    
+    #Arguments to run animation and measurements
+    parser = argparse.ArgumentParser(description="Animate & take measurements from the Ising Model")
+    parser.add_argument("size", type=int, default = 50)
+    parser.add_argument("kT", type = float)
+    parser.add_argument("dynamics", type = str, choices=["Glauber" , "Kawasaki"])
+    parser.add_argument("--run_mag", type = str, choices=["Y" , "N"], default = "N")
+    parser.add_argument("--run_therm_Glauber", type = str, choices=["Y" , "N"], default = "N")
+    parser.add_argument("--run_therm_Kawasaki", type = str, choices=["Y" , "N"], default = "N")
+
+    args = parser.parse_args()
+
+    lattice = IsingModel(kT = args.kT, size = args.size)
+    lattice.animate_lattice(dynamics = args.dynamics)
+
     time_0 = time.time()
-    Mag_model = IsingModel(kT = 3, size = 50)
+    if args.run_mag == "Y":
+        Mag_model = IsingModel(kT = 3, size = 50)
 
-    #Magnetic data
-    kT_data, m_avg_data, abs_m_data, m_sq_avg_data, errors = Mag_model.compute_average_magnetisation()
-    chi_data, chi_error_data = Mag_model.plot_susceptibility(kT_data, m_avg_data, m_sq_avg_data, errors) 
+        #Magnetic data
+        kT_data, m_avg_data, abs_m_data, m_sq_avg_data, errors = Mag_model.compute_average_magnetisation()
+        chi_data, chi_error_data = Mag_model.plot_susceptibility(kT_data, m_avg_data, m_sq_avg_data, errors) 
 
-    time_1 = time.time()
-    print(f"Magnetisation data collected in {(time_1 - time_0)/60} minutes.")
+        time_1 = time.time()
+        print(f"Magnetisation data collected in {(time_1 - time_0)/60} minutes.")
 
-    #Write data to csv file
-    all_data = np.column_stack((kT_data, abs_m_data, chi_data, chi_error_data))
-    np.savetxt("IsingDataMag.csv", all_data, delimiter=",", header = "kT, |M|, chi, chi_error") 
+        #Write data to csv file
+        all_data = np.column_stack((kT_data, abs_m_data, chi_data, chi_error_data))
+        np.savetxt("IsingDataMag.csv", all_data, delimiter=",", header = "kT, |M|, chi, chi_error") 
 
-    Therm_model_g = IsingModel(kT = 3, size = 50)
-    #Thermal data (Glauber)
-    kT_data, e_avg_G, e_sq_avg_G, e_errors_G = Therm_model_g.compute_average_energy(dynamics="Glauber")
-    c_data_G, c_errors_G = Therm_model_g.plot_heat_capacity("Glauber", kT_data, e_avg_G, e_sq_avg_G, e_errors_G)
+    if args.run_therm_Glauber == "Y":
 
-    time_2 = time.time()
-    print(f"Glauber thermal data collected in {(time_2 - time_1)/60} minutes.")
+        Therm_model_g = IsingModel(kT = 3, size = 50)
+        #Thermal data (Glauber)
+        kT_data, e_avg_G, e_sq_avg_G, e_errors_G = Therm_model_g.compute_average_energy(dynamics="Glauber")
+        c_data_G, c_errors_G = Therm_model_g.plot_heat_capacity("Glauber", kT_data, e_avg_G, e_sq_avg_G, e_errors_G)
 
-    #Write data to csv file
-    all_data = np.column_stack((kT_data, e_avg_G, c_data_G, c_errors_G))
-    np.savetxt("IsingDataGlauber.csv", all_data, delimiter=",", header = "kT, E(G), C(G), C(G)_error")
+        time_2 = time.time()
+        print(f"Glauber thermal data collected in {(time_2 - time_0)/60} minutes.")
 
-    Therm_model_k = IsingModel(kT=3, size= 50)
-    #Thermal data (Kawasaki)
-    kT_data, e_avg_K, e_sq_avg_K, e_errors_K = Therm_model_k.compute_average_energy(dynamics="Kawasaki")
-    c_data_K, c_errors_K = Therm_model_k.plot_heat_capacity("Kawasaki", kT_data, e_avg_K, e_sq_avg_K, e_errors_K)
+        #Write data to csv file
+        all_data = np.column_stack((kT_data, e_avg_G, c_data_G, c_errors_G))
+        np.savetxt("IsingDataGlauber.csv", all_data, delimiter=",", header = "kT, E(G), C(G), C(G)_error")
 
-    time_3 = time.time()
-    print(f"Kawasaki thermal data collected in {(time_3 - time_2)/60} minutes.")
+    if args.run_therm_Kawasaki == "Y":
 
-    #Write data to csv file
-    all_data = np.column_stack((kT_data, e_avg_K, c_data_K, c_errors_K))
-    np.savetxt("IsingDataKawasaki.csv", all_data, delimiter=",", header = "kT, E(K), C(K), C(K)_error")
+        Therm_model_k = IsingModel(kT=3, size= 50)
+        #Thermal data (Kawasaki)
+        kT_data, e_avg_K, e_sq_avg_K, e_errors_K = Therm_model_k.compute_average_energy(dynamics="Kawasaki")
+        c_data_K, c_errors_K = Therm_model_k.plot_heat_capacity("Kawasaki", kT_data, e_avg_K, e_sq_avg_K, e_errors_K)
+
+        time_3 = time.time()
+        print(f"Kawasaki thermal data collected in {(time_3 - time_0)/60} minutes.")
+
+        #Write data to csv file
+        all_data = np.column_stack((kT_data, e_avg_K, c_data_K, c_errors_K))
+        np.savetxt("IsingDataKawasaki.csv", all_data, delimiter=",", header = "kT, E(K), C(K), C(K)_error")
 
     time_4 = time.time()
-    print(f"Data written to data file in {time_4 - time_3} s.")
+    print(f"Measurements done in {(time_4 - time_0)/60} minutes.")
     
        
 if __name__ == "__main__":
 
     main()
-    
-    
-    
-    
-    #N = input("System size: ")
+
 
     
 
