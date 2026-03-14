@@ -54,7 +54,7 @@ class CahnHilliard:
     def animate_lattice(self, number_of_frames = 10000, interval = 50):
         """Animates evolution of system over time"""
 
-        iter_per_frame = self.size ** 2
+        iter_per_frame = self.size
         fig, ax = plt.subplots()
         figure = ax.imshow(self.lattice, cmap = "viridis")
         fig.colorbar(figure, ax=ax)
@@ -67,6 +67,7 @@ class CahnHilliard:
                 self.calc_order_param()
 
             figure.set_data(self.lattice)
+            figure.set_clim(vmin=1, vmax=-1)
 
             return [figure]
         
@@ -77,9 +78,10 @@ class CahnHilliard:
 
 
 def main():
-    c = CahnHilliard(phi_0=0, size=100, parameter=1, space_step=1, time_step=0.01)
+    c = CahnHilliard(phi_0=0.5, size=100, parameter=1, space_step=1, time_step=0.025)
     c.animate_lattice()
 
+    
 main()
 
 
