@@ -115,11 +115,11 @@ class CahnHilliard:
         plt.title(f"Time evolution of free energy density for $\\phi_0$ = {self.phi_0}", fontsize = 12)
         plt.tick_params(axis = "both", labelsize = 12)
         plt.tight_layout()
-        plt.savefig(f"Free_energy_phi_0.0.png")
+        plt.savefig(f"Free_energy_phi_0.png")
         plt.show()
 
         data = np.column_stack((time_data, f_data))
-        np.savetxt("Free_energy_0.0_csv", data, delimiter=",", header = "time, f")
+        np.savetxt("Free_energy_0_csv", data, delimiter=",", header = "time, f")
     
 
 
