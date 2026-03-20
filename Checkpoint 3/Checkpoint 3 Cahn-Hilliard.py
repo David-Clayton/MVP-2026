@@ -3,7 +3,6 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation as animate
 import argparse
 import time
-import random
 from numba import njit
 from joblib import Parallel, delayed
 
@@ -120,12 +119,6 @@ class CahnHilliard:
 
         data = np.column_stack((time_data, f_data))
         np.savetxt("Free_energy_0_csv", data, delimiter=",", header = "time, f")
-    
-
-
-            
-
-
 
 def main():
     time_0 = time.time()
