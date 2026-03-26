@@ -92,7 +92,7 @@ class CahnHilliard:
 
         return f
     
-    def free_energy_plot(self, no_meas = 2000, iter_per_meas = 1000):
+    def free_energy_plot(self, phi_0, no_meas = 2000, iter_per_meas = 1000):
         """Plot the evolution of free energy of the system over time"""
         #Array of timesteps
         time_data = self.time_step * np.linspace(0, no_meas*iter_per_meas, no_meas)
@@ -114,19 +114,39 @@ class CahnHilliard:
         plt.title(f"Time evolution of free energy density for $\\phi_0$ = {self.phi_0}", fontsize = 12)
         plt.tick_params(axis = "both", labelsize = 12)
         plt.tight_layout()
-        plt.savefig(f"Free_energy_phi_0.png")
+        plt.savefig(f"Free_energy_{phi_0}.png")
         plt.show()
 
         data = np.column_stack((time_data, f_data))
-        np.savetxt("Free_energy_0_csv", data, delimiter=",", header = "time, f")
+        np.savetxt(f"Free_energy_{phi_0}.csv", data, delimiter=",", header = "time, f")
 
 def main():
+    parser = argparse.ArgumentParser(description="Solve the Cahn-Hilliard Eq. numerically")
+    parser.add_argument("size", type = int, default = 100)
+    parser.add_argument("phi_0", type = float)
+    parser.add_argument("parameter", type = float, default=1.0)
+    parser.add_argument("space_step", type = float, default = 1.0)
+    parser.add_argument("time_step", type = float, default = 0.02)
+    parser.add_argument("--free_energy", type=str, choices=["Y", "N"], default="N")
+
+    args = parser.parse_args()
+
     time_0 = time.time()
-    c = CahnHilliard(phi_0=0.0, size=100, parameter=1, space_step=1, time_step=0.02)
-    c.free_energy_plot()
+
+    ch = CahnHilliard(size = args.size, phi_0=args.phi_0, parameter=args.parameter, 
+                      space_step=args.space_step, time_step=args.time_step)
+
+    ch.animate_lattice()
+
+    if args.free_energy == "Y":
+        ch.free_energy_plot(phi_0=args.phi_0)
+
     time_1 = time.time()
-    print(f"Functions done in {(time_1 - time_0)/60} minutes")
-main()
+
+    print(f"Complete in {(time_1 - time_0)/60} minutes")
+
+if __name__ == "__main__":
+    main()
 
 
 
