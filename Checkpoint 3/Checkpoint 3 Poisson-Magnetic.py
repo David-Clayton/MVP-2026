@@ -181,6 +181,7 @@ class PoissonMagnetic:
             plt.ylabel(r"magnetic Potential A", fontsize = 12)
             plt.title(f"Magnetic Potential for a Thin Wire", fontsize = 16)
             plt.tick_params(axis = "both", labelsize = 12)
+            plt.xscale("log")
             plt.tight_layout()
             plt.legend()
             plt.savefig(f"Magneticpotentialrad.png")
@@ -265,7 +266,7 @@ def main():
     parser.add_argument("size", type = int, default=50)
     parser.add_argument("J", type = str, default = "thinwire")
     parser.add_argument("tolerance", type = float, default=0.000001)
-    parser.add_argument("algorithm", type = str, choices=["Jacobi, Gauss-Seidel, SOR"])
+    parser.add_argument("algorithm", type = str, choices=["Jacobi", "Gauss-Seidel", "SOR"])
     parser.add_argument("omega", type = float, default=1.87)
     parser.add_argument("--potential", type = str, choices=["Y", "N"], default="N")
     parser.add_argument("--field", type=str, choices=["Y", "N"], default="N")
@@ -274,7 +275,7 @@ def main():
 
     time_0 = time.time()
 
-    pm = PoissonMagnetic(size = args.size, rho = args.rho, tolerance=args.tolerance)
+    pm = PoissonMagnetic(size = args.size, J = args.J, tolerance=args.tolerance)
 
     pm.solve_for_potential(omega = args.omega, algorithm=args.algorithm)
 

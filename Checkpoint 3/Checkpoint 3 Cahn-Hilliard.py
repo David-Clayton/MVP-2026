@@ -58,7 +58,7 @@ class CahnHilliard:
         fig, ax = plt.subplots()
         figure = ax.imshow(self.lattice, cmap = "viridis")
         fig.colorbar(figure, ax=ax)
-        ax.set_title(f"Evolution of phase seperated system (Working title)")
+        ax.set_title(f"Time evolution of phase seperated system")
         
         def update(frame): #Needs frame arg as animate passes current frame no. to update()
 
