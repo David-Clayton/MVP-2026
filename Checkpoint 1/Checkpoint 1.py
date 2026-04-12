@@ -296,9 +296,10 @@ class IsingModel:
         if plot == True:
             plt.plot(kT_data, abs_m_avg_T, marker = "o", color = "g")
             plt.grid(which = "both")
-            plt.xlabel("kT/J")
-            plt.ylabel(f"Absolute magnetisation |M|")
-            plt.title(f"|M| vs. thermal energy for a {self.size}x{self.size} \n lattice using Glauber dynamics")
+            plt.xlabel("kT/J", fontsize = 16)
+            plt.ylabel(f"Absolute magnetisation |M|", fontsize = 16)
+            plt.title(f"|M| vs. thermal energy for a {self.size}x{self.size} \n lattice using Glauber dynamics", fontsize = 12)
+            plt.tight_layout()
             plt.savefig(f"Abs_mag_Glauber")
             plt.show()
         
@@ -349,7 +350,7 @@ class IsingModel:
                 chi_index += 1
             
             #Calculate overall error on chi for each T
-            chi_error = np.sqrt(np.mean(chi_data ** 2) + (np.mean(chi_data))**2)
+            chi_error = np.sqrt(np.mean(chi_data ** 2) - (np.mean(chi_data))**2)
             chi_error_T[chi_T_index] = (chi_error)
             chi_T_index += 1
             print(f"Errors for kT = {array[i,0]} done")
@@ -369,9 +370,10 @@ class IsingModel:
         if plot == True:
             plt.errorbar(kT_data, chi_data, yerr= chi_errors, marker = "o", color = "purple")
             plt.grid(which = "both")
-            plt.xlabel(f"kT/J")
-            plt.ylabel(r"Magnetic susceptibility $\chi$")
-            plt.title(f"Susceptibility vs. thermal energy for a {self.size}x{self.size} \n lattice using Glauber Dynamics")
+            plt.xlabel(f"kT/J", fontsize = 16)
+            plt.ylabel(r"Magnetic susceptibility $\chi$", fontsize = 16)
+            plt.title(f"Susceptibility vs. thermal energy for a {self.size}x{self.size} \n lattice using Glauber Dynamics", fontsize = 12)
+            plt.tight_layout()
             plt.savefig(f"Chi_Glauber")
             plt.show()
 
@@ -447,9 +449,10 @@ class IsingModel:
 
             plt.plot(kT_data, e_avg_T, marker = "o", color = "black")
             plt.grid(which = "both")
-            plt.xlabel("kT/J")
-            plt.ylabel(f"Average energy <E>")
-            plt.title(f"<E> vs. thermal energy for a {self.size}x{self.size} \n lattice using {dynamics} dynamics")
+            plt.xlabel("kT/J", fontsize = 16)
+            plt.ylabel(f"Average energy <E>", fontsize = 16)
+            plt.title(f"<E> vs. thermal energy for a {self.size}x{self.size} \n lattice using {dynamics} dynamics", fontsize = 12)
+            plt.tight_layout()
             plt.savefig(f"Avg_E_{dynamics}")
             plt.show()
 
@@ -500,7 +503,7 @@ class IsingModel:
                 c_index += 1
             
             #Calculate overall error on heat capacity for each T
-            c_error = np.sqrt(np.mean(c_data ** 2) + (np.mean(c_data))**2)
+            c_error = np.sqrt(np.mean(c_data ** 2) - (np.mean(c_data))**2)
             c_error_T[c_T_index] = (c_error)
             c_T_index += 1
             print(f"Errors for kT = {array[i,0]} done")
@@ -520,9 +523,10 @@ class IsingModel:
         if plot == True:
             plt.errorbar(kT_data, c_data, yerr= c_errors, marker = "o", color = "orange")
             plt.grid(which = "both")
-            plt.xlabel(f"kT/J")
-            plt.ylabel(f"Heat capacity C")
-            plt.title(f"Heat capacity vs. thermal energy for a {self.size}x{self.size} \n lattice using {dynamics} Dynamics")
+            plt.xlabel(f"kT/J", fontsize = 16)
+            plt.ylabel(f"Heat capacity C", fontsize = 16)
+            plt.title(f"Heat capacity vs. thermal energy for a {self.size}x{self.size} \n lattice using {dynamics} Dynamics", fontsize = 12)
+            plt.tight_layout()
             plt.savefig(f"Heat_cap_{dynamics}")
             plt.show()
 
