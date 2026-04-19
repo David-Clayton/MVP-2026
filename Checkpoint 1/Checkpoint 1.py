@@ -4,7 +4,124 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation as animate
 import argparse 
 import time 
-from numba import jit
+from numba import njit
+
+@njit
+def glauber_dynamics_numba(kT, lattice, size):
+    """Numba-suitable Glauber dynamics function. See docstring for glauber_dynamics
+    in class for details."""
+
+    i = np.random.randint(0, size)
+    j = np.random.randint(0, size)
+
+    s_i = lattice[i, j] #Inital spin
+        
+    nearest_neighbours = np.array([lattice[(i+1) % size, j] , lattice[(i-1) % size, j],
+                                       lattice[i, (j+1) % size] , lattice[i, (j-1) % size]]) 
+        
+    #Energy change equation = 2 * sum of multiplied NN spins
+
+    energy_change = 2 * np.sum(s_i * nearest_neighbours)
+
+    #Accept new state conditional on energy_change
+
+    boltzmann_factor = np.exp(-energy_change / kT)
+    if energy_change <= 0:
+        lattice[i,j] = -lattice[i,j]
+    elif energy_change > 0: 
+        r = np.random.random()
+        if r < boltzmann_factor:
+            lattice[i,j] = -lattice[i,j]
+        
+    return lattice
+
+@njit
+def kawasaki_dynamics_numba(kT, lattice, size):
+    """Numba-suitable Kawasaki dynamics function. See docstring for kawasaki_dynamics
+    in class for details."""
+
+    [i_1, j_1] = [np.random.randint(0, size), np.random.randint(0, size)]
+    [i_2, j_2] = [np.random.randint(0, size), np.random.randint(0, size)]
+
+    if i_1 == i_2 and j_1 == j_2: #Rejects if same site chosen twice.
+        return lattice
+        
+    elif lattice[i_1, j_1] == lattice[i_2, j_2]: #Rejects if swapped spins equal because it means nothing.
+        return lattice
+        
+    #Distances between lattice sites including periodicity
+    delta_i = min(abs(i_1 - i_2), size - abs(i_1 - i_2))
+    delta_j = min(abs(j_1 - j_2), size - abs(j_1 - j_2))
+        
+        
+    if (delta_i > 1 or delta_j > 1) or (delta_i == 1 and delta_j == 1): #If spins are not adjacent
+        s_1 = lattice[i_1, j_1]  
+        s_2 = lattice[i_2, j_2]
+
+        #Basically do Glauber dynamics twice simultaneously
+
+        nearest_neighbours_1 = np.array([lattice[(i_1+1) % size, j_1] , lattice[(i_1-1) % size, j_1],
+                                        lattice[i_1, (j_1+1) % size] , lattice[i_1, (j_1-1) % size]]) 
+            
+        nearest_neighbours_2 = np.array([lattice[(i_2+1) % size, j_2] , lattice[(i_2-1) % size, j_2],
+                                       lattice[i_2, (j_2+1) % size] , lattice[i_2, (j_2-1) % size]]) 
+
+        energy_change_1 = 2 * np.sum(s_1 * nearest_neighbours_1)
+        energy_change_2 = 2 * np.sum(s_2 * nearest_neighbours_2)
+        
+        tot_energy_change = energy_change_1 + energy_change_2
+ 
+        #Accept or reject state based on tot_energy_change
+
+        boltzmann_factor = np.exp(-tot_energy_change / kT)
+        if tot_energy_change <= 0:
+            lattice[i_1,j_1] = -lattice[i_1,j_1]
+            lattice[i_2,j_2] = -lattice[i_2,j_2]
+        elif tot_energy_change > 0:
+            r = np.random.random()
+            if r < boltzmann_factor:
+                lattice[i_1,j_1] = -lattice[i_1,j_1]
+                lattice[i_2,j_2] = -lattice[i_2,j_2]
+
+        return lattice
+        
+    elif (delta_i == 1 and delta_j == 0) or (delta_i == 0 and delta_j == 1): #Spins adjacent
+
+        s_1 = lattice[i_1, j_1]  
+        s_2 = lattice[i_2, j_2]
+
+        nearest_neighbours_1 = np.array([lattice[(i_1+1) % size, j_1] , lattice[(i_1-1) % size, j_1],
+                                    lattice[i_1, (j_1+1) % size] , lattice[i_1, (j_1-1) % size]]) 
+            
+        nearest_neighbours_2 = np.array([lattice[(i_2+1) % size, j_2] , lattice[(i_2-1) % size, j_2],
+                                    lattice[i_2, (j_2+1) % size] , lattice[i_2, (j_2-1) % size]]) 
+
+        #Calculate energy change not yet considering adjacency
+
+        energy_change_1 = 2 * np.sum(s_1 * nearest_neighbours_1)
+        energy_change_2 = 2 * np.sum(s_2 * nearest_neighbours_2)
+        
+        tot_energy_change = energy_change_1 + energy_change_2
+
+        #Correct for adjacency 
+            
+        tot_energy_change = tot_energy_change - 4 * s_1 * s_2
+
+        #Accept or reject state based on tot_energy_change
+
+        boltzmann_factor = np.exp(-tot_energy_change / kT)
+        if tot_energy_change <= 0:
+            lattice[i_1,j_1] = -lattice[i_1,j_1]
+            lattice[i_2,j_2] = -lattice[i_2,j_2]
+        elif tot_energy_change > 0:
+            r = np.random.random()
+            if r < boltzmann_factor:
+                lattice[i_1,j_1] = -lattice[i_1,j_1]
+                lattice[i_2,j_2] = -lattice[i_2,j_2]
+
+        return lattice
+
+
 
 class IsingModel:
 
@@ -58,29 +175,7 @@ class IsingModel:
         Inputs: none
         Outputs: self.lattice (possibly changed)"""
 
-        i = np.random.randint(0, self.size)
-        j = np.random.randint(0, self.size)
-
-        s_i = self.lattice[i, j] #Inital spin
-        
-        nearest_neighbours = np.array([self.lattice[(i+1) % self.size, j] , self.lattice[(i-1) % self.size, j],
-                                       self.lattice[i, (j+1) % self.size] , self.lattice[i, (j-1) % self.size]]) 
-        
-        #Energy change equation = 2 * sum of multiplied NN spins
-
-        energy_change = 2 * np.sum(s_i * nearest_neighbours)
-
-        #Accept new state conditional on energy_change
-
-        boltzmann_factor = np.exp(-energy_change / kT)
-        if energy_change <= 0:
-            self.lattice[i,j] = -self.lattice[i,j]
-        elif energy_change > 0: 
-            r = random.uniform(0, 1)
-            if r < boltzmann_factor:
-                self.lattice[i,j] = -self.lattice[i,j]
-        
-        return self.lattice
+        self.lattice = glauber_dynamics_numba(kT, self.lattice, self.size)
     
     def kawasaki_dynamics(self, kT):
 
@@ -91,86 +186,7 @@ class IsingModel:
         Inputs: None
         Outputs: self.lattice (possibly altered)"""
 
-        [i_1, j_1] = [np.random.randint(0, self.size), np.random.randint(0, self.size)]
-        [i_2, j_2] = [np.random.randint(0, self.size), np.random.randint(0, self.size)]
-
-        if i_1 == i_2 and j_1 == j_2: #Rejects if same site chosen twice.
-            return self.lattice
-        
-        elif self.lattice[i_1, j_1] == self.lattice[i_2, j_2]: #Rejects if swapped spins equal because it means nothing.
-            return self.lattice
-        
-        #Distances between lattice sites including periodicity
-        delta_i = min(abs(i_1 - i_2), self.size - abs(i_1 - i_2))
-        delta_j = min(abs(j_1 - j_2), self.size - abs(j_1 - j_2))
-        
-        
-        if (delta_i > 1 or delta_j > 1) or (delta_i == 1 and delta_j == 1): #If spins are not adjacent
-            s_1 = self.lattice[i_1, j_1]  
-            s_2 = self.lattice[i_2, j_2]
-
-            #Basically do Glauber dynamics twice simultaneously
-
-            nearest_neighbours_1 = np.array([self.lattice[(i_1+1) % self.size, j_1] , self.lattice[(i_1-1) % self.size, j_1],
-                                       self.lattice[i_1, (j_1+1) % self.size] , self.lattice[i_1, (j_1-1) % self.size]]) 
-            
-            nearest_neighbours_2 = np.array([self.lattice[(i_2+1) % self.size, j_2] , self.lattice[(i_2-1) % self.size, j_2],
-                                       self.lattice[i_2, (j_2+1) % self.size] , self.lattice[i_2, (j_2-1) % self.size]]) 
-
-            energy_change_1 = 2 * np.sum(s_1 * nearest_neighbours_1)
-            energy_change_2 = 2 * np.sum(s_2 * nearest_neighbours_2)
-        
-            tot_energy_change = energy_change_1 + energy_change_2
- 
-            #Accept or reject state based on tot_energy_change
-
-            boltzmann_factor = np.exp(-tot_energy_change / kT)
-            if tot_energy_change <= 0:
-                self.lattice[i_1,j_1] = -self.lattice[i_1,j_1]
-                self.lattice[i_2,j_2] = -self.lattice[i_2,j_2]
-            elif tot_energy_change > 0:
-                r = random.uniform(0, 1)
-                if r < boltzmann_factor:
-                    self.lattice[i_1,j_1] = -self.lattice[i_1,j_1]
-                    self.lattice[i_2,j_2] = -self.lattice[i_2,j_2]
-
-            return self.lattice
-        
-        elif (delta_i == 1 and delta_j == 0) or (delta_i == 0 and delta_j == 1): #Spins adjacent
-
-            s_1 = self.lattice[i_1, j_1]  
-            s_2 = self.lattice[i_2, j_2]
-
-            nearest_neighbours_1 = np.array([self.lattice[(i_1+1) % self.size, j_1] , self.lattice[(i_1-1) % self.size, j_1],
-                                       self.lattice[i_1, (j_1+1) % self.size] , self.lattice[i_1, (j_1-1) % self.size]]) 
-            
-            nearest_neighbours_2 = np.array([self.lattice[(i_2+1) % self.size, j_2] , self.lattice[(i_2-1) % self.size, j_2],
-                                       self.lattice[i_2, (j_2+1) % self.size] , self.lattice[i_2, (j_2-1) % self.size]]) 
-
-            #Calculate energy change not yet considering adjacency
-
-            energy_change_1 = 2 * np.sum(s_1 * nearest_neighbours_1)
-            energy_change_2 = 2 * np.sum(s_2 * nearest_neighbours_2)
-        
-            tot_energy_change = energy_change_1 + energy_change_2
-
-            #Correct for adjacency 
-            
-            tot_energy_change = tot_energy_change - 4 * s_1 * s_2
-
-            #Accept or reject state based on tot_energy_change
-
-            boltzmann_factor = np.exp(-tot_energy_change / kT)
-            if tot_energy_change <= 0:
-                self.lattice[i_1,j_1] = -self.lattice[i_1,j_1]
-                self.lattice[i_2,j_2] = -self.lattice[i_2,j_2]
-            elif tot_energy_change > 0:
-                r = random.uniform(0, 1)
-                if r < boltzmann_factor:
-                    self.lattice[i_1,j_1] = -self.lattice[i_1,j_1]
-                    self.lattice[i_2,j_2] = -self.lattice[i_2,j_2]
-
-            return self.lattice
+        self.lattice = kawasaki_dynamics_numba(kT, self.lattice, self.size)
         
     def animate_lattice(self, dynamics, number_of_frames = 500, interval = 50):
         """Animates lattice evolution over time
