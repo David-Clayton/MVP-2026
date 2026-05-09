@@ -165,11 +165,12 @@ class PoissonMagnetic:
         if self.J_str == "thinwire": 
             #If potential cylindrically symmetric, just need a single 1D cut
             cut = A_midplane.shape[0] // 2
-            radial = np.arange(A_midplane.shape[0] // 2)
-            potential_cut = A_midplane[cut, cut:] 
+            radial = np.arange(1, A_midplane.shape[0] // 2)
+            potential_cut = A_midplane[cut, cut+1:] 
+            print(radial)
 
-            #Potential should be ~ln(r)
-            fit = -potential_cut[1] * np.log(radial) + potential_cut[1]
+            #Fit potenti
+            fit = potential_cut[0] * (1 - np.log(radial)/np.log(radial[2]))
 
             plt.plot(radial, fit, markersize = 0, color = "red", label = "ln(r)")
             plt.plot(radial, potential_cut, markersize = 5, marker = "o", color = "blue")
@@ -179,6 +180,7 @@ class PoissonMagnetic:
             plt.title(f"Magnetic Potential for a Thin Wire", fontsize = 16)
             plt.tick_params(axis = "both", labelsize = 12)
             plt.xscale("log")
+            plt.yscale("log")
             plt.tight_layout()
             plt.legend()
             plt.savefig(f"Magneticpotentialrad.png")
@@ -219,7 +221,7 @@ class PoissonMagnetic:
         #B-field_magnitude
         B_size = np.sqrt(B_x_midplane**2 + B_y_midplane**2)
 
-        plt.quiver(B_y_midplane, B_x_midplane, scale = 0.5)
+        plt.quiver(B_y_midplane, B_x_midplane, scale = 2)
         plt.title(f"Discretised Magnetic Field", fontsize = 16)
         plt.savefig(f"Bfield.png")
         plt.show()
@@ -235,11 +237,11 @@ class PoissonMagnetic:
         if self.J_str == "thinwire": 
             #If potential spherically symmetric, just need a single 1D cut
             cut = B_size.shape[0] // 2
-            radial = np.arange(B_size.shape[0] // 2)
-            bfield_cut = B_size[cut, cut:] 
+            radial = np.arange(1, B_size.shape[0] // 2)
+            bfield_cut = B_size[cut, cut+1:] 
 
             #magnetic field should be 1/r
-            fit = bfield_cut[1]/radial
+            fit = bfield_cut[0]/radial
 
             plt.plot(radial, fit, markersize = 0, color = "red", label = "1/r")
             plt.plot(radial, bfield_cut, markersize = 5, marker = "o", color = "blue")
@@ -248,6 +250,8 @@ class PoissonMagnetic:
             plt.ylabel(r"Magnetic Field B", fontsize = 12)
             plt.title(f"Magnetic Field Strength for a Thin Wire", fontsize = 16)
             plt.tick_params(axis = "both", labelsize = 12)
+            plt.xscale("log")
+            plt.yscale("log")
             plt.tight_layout()
             plt.legend()
             plt.savefig(f"magneticfieldrad.png")

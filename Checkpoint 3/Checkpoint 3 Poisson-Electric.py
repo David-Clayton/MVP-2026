@@ -167,11 +167,11 @@ class PoissonElectric:
         if self.rho_str == "monopole":
             #If potential spherically symmetric, just need a single 1D cut
             cut = phi_midplane.shape[0] // 2
-            radial = np.arange(phi_midplane.shape[0] // 2)
-            potential_cut = phi_midplane[cut, cut:] 
+            radial = np.arange(1, phi_midplane.shape[0] // 2)
+            potential_cut = phi_midplane[cut, cut+1:] 
 
             #Potential should be ~1/r
-            fit = potential_cut[1]/radial
+            fit = potential_cut[0]/radial
 
             plt.plot(radial, fit, markersize = 0, color = "red", label = "1/r")
             plt.plot(radial, potential_cut, markersize = 5, marker = "o", color = "blue")
@@ -238,11 +238,11 @@ class PoissonElectric:
         if self.rho_str == "monopole":
             #If potential spherically symmetric, just need a single 1D cut
             cut = E_size.shape[0] // 2
-            radial = np.arange(E_size.shape[0] // 2)
-            efield_cut = E_size[cut, cut:] 
+            radial = np.arange(1, E_size.shape[0] // 2)
+            efield_cut = E_size[cut, cut+1:] 
 
             #Electric field should be 1/r^2
-            fit = efield_cut[1]/(radial**2)
+            fit = efield_cut[0]/(radial**2)
 
             plt.plot(radial, fit, markersize = 0, color = "red", label = "1/r^2")
             plt.plot(radial, efield_cut, markersize = 5, marker = "o", color = "blue")
