@@ -31,11 +31,7 @@ def sirs_step(lattice, size, p_si, p_ir, p_rs):
                                        lattice[i, (j+1) % size] , lattice[i, (j-1) % size]]) 
         
         #Test if any nearest neighbour is infected
-        is_neighbour_infected = False
-        for n in nearest_neighbours:
-            if n == 1:
-                is_neighbour_infected = True
-                break
+        is_neighbour_infected = np.any(nearest_neighbours == 1)
 
         #Change state based on probability and infection condition
         if state == 0 and is_neighbour_infected:
@@ -147,7 +143,7 @@ class SIRS:
         #No. iterations of algorithm per sweep
         iter_per_sweep = self.size ** 2
         #Number of measurments to be made per p_si/p_rs combination
-        no_of_sweeps = 10000
+        no_of_sweeps = 1000
 
         #Number of lattice points in array
         n = self.size ** 2
@@ -212,7 +208,7 @@ class SIRS:
         #No. iterations of algorithm per sweep
         iter_per_sweep = self.size ** 2
         #Number of measurments to be made per p_si/p_rs combination
-        no_of_sweeps = 10000
+        no_of_sweeps = 1000
 
         p_si_range = np.arange(0.2, 0.51, 0.01)
 
@@ -328,7 +324,7 @@ class SIRS:
         iter_per_sweep = self.size ** 2
         n = self.size ** 2
         #Number of sweeps (measurements) to do per f_im
-        no_sweeps = 10000
+        no_sweeps = 1000
         for i, f_im in enumerate(f_im_range):
             #Reset lattice for each f_im value
             prob = (1 - f_im) / 3

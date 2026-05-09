@@ -1,3 +1,9 @@
+Requirements:
+numpy v. 2.3.4 or later
+numba v. 0.62.1 or later
+matplotlib v. 3.10.6 or later
+pandas v. 2.3.3 or later
+
 ##Checkpoint 2 GoL.py
 
 #Python script to run a version of Conway's Game of Life

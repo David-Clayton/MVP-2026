@@ -3,7 +3,6 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation as animate
 import argparse
 import time
-import random
 from numba import njit
 
 @njit
@@ -205,7 +204,7 @@ class GameOfLife:
         hist_data = np.column_stack((lower_edges, upper_edges, counts))
         np.savetxt("GoLHistogram.csv", hist_data, delimiter=",", header="Lower_bound, Upper_bound, frequency")
         
-    def glider_speed(self, no_sweeps = 100):
+    def glider_speed(self, no_sweeps = 90):
         """Calculate the speed of a glider by tracking its centre of mass
         over time
         Inputs: number of sweeps to track glider over (default = 100)
@@ -221,29 +220,27 @@ class GameOfLife:
         time_data = np.arange(0, no_sweeps, 1)
         position = np.zeros(len(time_data))
 
-        pos_index = 0
         for i in time_data:
             #Find where glider is (where live cells are)
             live_cells = np.argwhere(self.lattice == 1)
             #Get CoM by averaging coordinates
-            centre_of_mass = np.sum(live_cells, axis = 0)/5
+            centre_of_mass = np.sum(live_cells, axis = 0)/len(live_cells)
             #distance from centre of lattice
             #Glider is moving along line of sight of centre of lattice
-            distance_from_origin = np.sqrt((centre_of_mass[0]-self.size//2)**2 + (centre_of_mass[1]-self.size//2)**2)
+            distance_from_origin = np.sqrt((centre_of_mass[0]-(self.size-1)/2)**2 + (centre_of_mass[1]-(self.size-1)/2)**2)
 
-            position[pos_index] = distance_from_origin
-
-            pos_index += 1
+            position[i] = distance_from_origin
 
             self.run_rules()
 
-        #Calculate speed of glider from 100 sweep motion track
-        max_distance = np.max(position)
-        max_time = np.argmax(position)
-        min_distance = np.min(position)
-        min_time = np.argmin(position)
+        #Cut the first ten timesteps from the position array as the glider settles in
+        position = position[10:]
+        time_data = time_data[10:]
 
-        speed = (max_distance - min_distance)/(max_time - min_time)
+        #Fit linear relation to remaining data to derive speed
+        fit_coeff = np.polyfit(time_data, position, deg = 1)
+        #Gradient of linear fit is speed
+        speed = fit_coeff[0]
 
         #Plot results
         plt.plot(time_data, position, label = f"Speed={speed}")

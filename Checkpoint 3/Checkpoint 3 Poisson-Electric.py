@@ -4,8 +4,6 @@ from matplotlib.animation import FuncAnimation as animate
 import argparse
 import time
 from numba import njit
-from joblib import Parallel, delayed
-import pandas as pd
 
 @njit
 def gauss_seidel_algorithm(size, phi, rho):

@@ -1,3 +1,8 @@
+Requirements:
+numpy v. 2.3.4 or later
+numba v. 0.62.1 or later
+matplotlib v. 3.10.6 or later
+
 ##Ising model with Monte Carlo
 
 Python script to simulate a 2D Ising model as a lattice and its time evolution with either Glauber or Kawasaki dynamics. The time 
