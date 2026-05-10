@@ -4,6 +4,7 @@ from matplotlib.animation import FuncAnimation as animate
 import argparse
 import time
 from numba import njit
+from scipy.optimize import curve_fit
 
 @njit
 def gauss_seidel_algorithm(size, A, J):
@@ -169,8 +170,13 @@ class PoissonMagnetic:
             potential_cut = A_midplane[cut, cut+1:] 
             print(radial)
 
-            #Fit potenti
-            fit = potential_cut[0] * (1 - np.log(radial)/np.log(radial[2]))
+            #Fit potential data to ~ln(r) relation
+            def potential_fit(r, a, b):
+                return a*np.log(r) + b
+
+            params = curve_fit(potential_fit, radial, potential_cut)[0]
+            a, b = params
+            fit = a*np.log(radial) + b
 
             plt.plot(radial, fit, markersize = 0, color = "red", label = "ln(r)")
             plt.plot(radial, potential_cut, markersize = 5, marker = "o", color = "blue")
@@ -240,8 +246,13 @@ class PoissonMagnetic:
             radial = np.arange(1, B_size.shape[0] // 2)
             bfield_cut = B_size[cut, cut+1:] 
 
-            #magnetic field should be 1/r
-            fit = bfield_cut[0]/radial
+            #Fit field data to ~1/r relation
+            def potential_fit(r, a, b):
+                return a/r + b
+
+            params = curve_fit(potential_fit, radial, bfield_cut)[0]
+            a, b = params
+            fit = a/radial + b
 
             plt.plot(radial, fit, markersize = 0, color = "red", label = "1/r")
             plt.plot(radial, bfield_cut, markersize = 5, marker = "o", color = "blue")

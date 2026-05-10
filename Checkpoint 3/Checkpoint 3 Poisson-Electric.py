@@ -4,6 +4,7 @@ from matplotlib.animation import FuncAnimation as animate
 import argparse
 import time
 from numba import njit
+from scipy.optimize import curve_fit
 
 @njit
 def gauss_seidel_algorithm(size, phi, rho):
@@ -170,8 +171,13 @@ class PoissonElectric:
             radial = np.arange(1, phi_midplane.shape[0] // 2)
             potential_cut = phi_midplane[cut, cut+1:] 
 
-            #Potential should be ~1/r
-            fit = potential_cut[0]/radial
+            #Fit potential data to ~1/r relation
+            def potential_fit(r, a, b):
+                return a/r + b
+
+            params = curve_fit(potential_fit, radial, potential_cut)[0]
+            a, b = params
+            fit = a/radial + b
 
             plt.plot(radial, fit, markersize = 0, color = "red", label = "1/r")
             plt.plot(radial, potential_cut, markersize = 5, marker = "o", color = "blue")
@@ -241,8 +247,13 @@ class PoissonElectric:
             radial = np.arange(1, E_size.shape[0] // 2)
             efield_cut = E_size[cut, cut+1:] 
 
-            #Electric field should be 1/r^2
-            fit = efield_cut[0]/(radial**2)
+            #Fit field data to ~1/r^2 relation
+            def efield_fit(r, a, b):
+                return a/(r**2) + b
+
+            params = curve_fit(efield_fit, radial, efield_cut)[0]
+            a, b = params
+            fit = a/(radial**2) + b
 
             plt.plot(radial, fit, markersize = 0, color = "red", label = "1/r^2")
             plt.plot(radial, efield_cut, markersize = 5, marker = "o", color = "blue")
@@ -315,7 +326,7 @@ def main():
         E = pe.compute_electric_field()
         pe.plot_electric_field(E)
 
-    if args.field == "Y":
+    if args.potential == "Y":
         pe.plot_electric_potential()
 
     if args.sorconv == "Y":

@@ -3,7 +3,6 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation as animate
 import argparse
 import time
-from numba import njit
 
 class CahnHilliard:
     """Determine the numerical solution for the Cahn-Hilliard equation"""

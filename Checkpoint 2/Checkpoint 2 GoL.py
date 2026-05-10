@@ -250,7 +250,7 @@ class GameOfLife:
         plt.tick_params(axis="both", labelsize = 12)
         plt.tight_layout()
         plt.legend()
-        plt.savefig(f"Glidermotionzoomed")
+        plt.savefig(f"Glidermotion.png")
         plt.show()
 
         #Read data to csv file
